@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>english-sentence-analyzer · 长句分析 Demo</title>
+<style>
+  :root {
+    --ink: #1f2937;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --u1: #2563eb; --u1-bg: #eff6ff; --u1-ink: #1e40af;
+    --u2: #d97706; --u2-bg: #fffbeb; --u2-ink: #92400e;
+    --u3: #7c3aed; --u3-bg: #f5f3ff; --u3-ink: #5b21b6;
+    --u4: #059669; --u4-bg: #ecfdf5; --u4-ink: #065f46;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.7 "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 20px 20px 40px; }
+
+  /* 顶栏 */
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo { display: inline-flex; width: 40px; height: 40px; border-radius: 10px; background: #111827; color: #fff; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
+  h1 { margin: 0; font: 700 17px/1.3 var(--mono); }
+  .sub { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+  .badge { border: 1px solid var(--line); background: var(--card); color: var(--muted); border-radius: 999px; padding: 4px 12px; font-size: 12px; white-space: nowrap; }
+
+  /* 流程条 */
+  .flow { display: flex; gap: 8px; align-items: stretch; margin-top: 16px; }
+  .flow .node { flex: 1; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+  .flow .no { font: 12px/1.4 var(--mono); color: var(--muted); }
+  .flow .nm { font-weight: 600; font-size: 14px; }
+  .flow .ds { font-size: 12px; color: var(--muted); }
+  .flow .arr { align-self: center; color: var(--muted); }
+
+  /* 区块 */
+  section.block { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin-top: 16px; }
+  .step-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .step-no { font: 700 22px/1 var(--mono); color: #111827; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; }
+  .step-head h2 { margin: 0; font-size: 17px; }
+  .step-desc { color: var(--muted); font-size: 13px; }
+
+  /* 例句 */
+  .src { display: flex; gap: 10px; align-items: center; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+  .src .tag { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 1px 8px; color: var(--ink); }
+  .sentence { margin: 0; font: 16px/1.9 Georgia, "Times New Roman", serif; color: #111827; }
+  .meta { margin-top: 10px; font-size: 12px; color: var(--muted); }
+
+  /* 单元染色 */
+  .u1 { background: var(--u1-bg); color: var(--u1-ink); border-bottom: 2px solid var(--u1); }
+  .u2 { background: var(--u2-bg); color: var(--u2-ink); border-bottom: 2px solid var(--u2); }
+  .u3 { background: var(--u3-bg); color: var(--u3-ink); border-bottom: 2px solid var(--u3); }
+  .u4 { background: var(--u4-bg); color: var(--u4-ink); border-bottom: 2px solid var(--u4); }
+  .split { margin: 0; font: 16px/2.1 Georgia, "Times New Roman", serif; }
+  .split .seg { padding: 2px 4px; border-radius: 4px; }
+  .mini { display: inline-block; font: 700 10px/1.5 var(--mono); color: #fff; border-radius: 4px; padding: 0 5px; margin-right: 5px; vertical-align: 2px; }
+  .u1 .mini, .mini.u1 { background: var(--u1); }
+  .u2 .mini, .mini.u2 { background: var(--u2); }
+  .u3 .mini, .mini.u3 { background: var(--u3); }
+  .u4 .mini, .mini.u4 { background: var(--u4); }
+
+  /* 拆分：关系 */
+  .rels { margin-top: 14px; border-top: 1px dashed var(--line); }
+  .rel { display: flex; gap: 12px; align-items: baseline; padding: 8px 0; border-bottom: 1px dashed var(--line); font-size: 13px; }
+  .rel:last-child { border-bottom: none; }
+  .rel .pair { font: 600 13px var(--mono); color: #111827; min-width: 128px; }
+  .rel .type { border-radius: 999px; padding: 1px 10px; font-size: 12px; background: var(--bg); border: 1px solid var(--line); color: var(--ink); white-space: nowrap; }
+  .rel .note { color: var(--muted); }
+
+  /* 分析卡片 */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+  .card { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: #fff; }
+  .card.c1 { border-top: 3px solid var(--u1); }
+  .card.c2 { border-top: 3px solid var(--u2); }
+  .card.c3 { border-top: 3px solid var(--u3); }
+  .card.c4 { border-top: 3px solid var(--u4); }
+  .card h3 { margin: 0 0 8px; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+  .card h3 .kind { color: var(--muted); font-weight: 400; font-size: 12px; }
+  .quote { font: 14px/1.7 Georgia, "Times New Roman", serif; border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; }
+  .c1 .quote { background: var(--u1-bg); color: var(--u1-ink); }
+  .c2 .quote { background: var(--u2-bg); color: var(--u2-ink); }
+  .c3 .quote { background: var(--u3-bg); color: var(--u3-ink); }
+  .c4 .quote { background: var(--u4-bg); color: var(--u4-ink); }
+  .row { display: flex; gap: 8px; font-size: 13px; padding: 5px 0; border-top: 1px dotted var(--line); }
+  .row .k { color: var(--muted); min-width: 52px; flex-shrink: 0; }
+  .row .v { flex: 1; }
+  .row .v code { font: 12px var(--mono); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+
+  /* 整合 */
+  .merge { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 720px) { .merge { grid-template-columns: 1fr; } .flow .ds { display: none; } }
+  .panel { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .panel h3 { margin: 0 0 8px; font-size: 14px; }
+  .panel .row { border-top: 1px dotted var(--line); }
+  .panel .row:first-of-type { border-top: none; }
+  .trans { font-size: 14px; line-height: 1.9; background: var(--bg); border-radius: 6px; padding: 10px 12px; }
+  .explain { font-size: 13px; color: #374151; line-height: 1.9; }
+
+  footer { margin-top: 18px; color: var(--muted); font-size: 12px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <span class="logo">ESA</span>
+      <div>
+        <h1>english-sentence-analyzer</h1>
+        <p class="sub">英语长句分析工具 · UI Demo</p>
+      </div>
+    </div>
+    <span class="badge">静态演示 · 手工标注</span>
+  </header>
+
+  <div class="flow">
+    <div class="node">
+      <div class="no">STEP 01</div>
+      <div class="nm">拆分单句</div>
+      <div class="ds">长句拆成单句单元，记录连接与逻辑关系</div>
+    </div>
+    <div class="arr">→</div>
+    <div class="node">
+      <div class="no">STEP 02</div>
+      <div class="nm">分析单句</div>
+      <div class="ds">逐单元做结构、成分、语法点、词汇与中译</div>
+    </div>
+    <div class="arr">→</div>
+    <div class="node">
+      <div class="no">STEP 03</div>
+      <div class="nm">整合单句</div>
+      <div class="ds">恢复连接与指代，输出整句翻译与贯通解释</div>
+    </div>
+  </div>
+
+  <!-- 例句 -->
+  <section class="block">
+    <div class="src"><span class="tag">例句</span><span>考研英语（一）2008 · Text 2</span></div>
+    <p class="sentence">The Internet—and pressure from funding agencies, who are questioning why commercial publishers are making money from government-funded research by restricting access to it—is making access to scientific results a reality.</p>
+    <div class="meta">1 个长句 · 拆出 4 个单元 · 3 个语法层次（主干 / 插入语 / 从句嵌套）</div>
+  </section>
+
+  <!-- STEP 01 -->
+  <section class="block">
+    <div class="step-head">
+      <span class="step-no">01</span>
+      <h2>拆分单句</h2>
+      <span class="step-desc">按插入语与从句边界拆出单元，标注单元之间的连接与逻辑关系</span>
+    </div>
+
+    <p class="split"><span class="seg u1"><span class="mini">U1</span>The Internet</span><span class="seg u2">—<span class="mini">U2</span>and pressure from funding agencies,</span> <span class="seg u3"><span class="mini">U3</span>who are questioning why commercial publishers are making money from government-funded research by restricting access to it</span><span class="seg u4">—<span class="mini">U4</span>is making access to scientific results a reality.</span></p>
+
+    <div class="rels">
+      <div class="rel"><span class="pair">U1 ↔ U2</span><span class="type">并列</span><span class="note">and 承接，两者同为句子主语，位于破折号插入语内</span></div>
+      <div class="rel"><span class="pair">U2 → U3</span><span class="type">修饰</span><span class="note">逗号后引出非限制性定语从句，who 回指 funding agencies</span></div>
+      <div class="rel"><span class="pair">U3 内部</span><span class="type">嵌套</span><span class="note">why 宾语从句作 questioning 的宾语，从句中再套方式状语</span></div>
+      <div class="rel"><span class="pair">(U1+U2) → U4</span><span class="type">主干</span><span class="note">跳过破折号插入语后，主语与谓语直接相连</span></div>
+    </div>
+  </section>
+
+  <!-- STEP 02 -->
+  <section class="block">
+    <div class="step-head">
+      <span class="step-no">02</span>
+      <h2>分析单句</h2>
+      <span class="step-desc">对每个单元独立分析，结果暂不考虑单元之间的衔接</span>
+    </div>
+
+    <div class="cards">
+      <div class="card c1">
+        <h3><span class="mini u1">U1</span>主语 · 主干前半 <span class="kind">并列之一</span></h3>
+        <div class="quote">The Internet</div>
+        <div class="row"><span class="k">成分</span><span class="v">S，与 U2 并列；被插入语与谓语隔开</span></div>
+        <div class="row"><span class="k">语法点</span><span class="v">主谓分隔——考研长句最常见陷阱，先定位谓语再回接主语</span></div>
+        <div class="row"><span class="k">中译</span><span class="v">互联网</span></div>
+      </div>
+
+      <div class="card c2">
+        <h3><span class="mini u2">U2</span>插入语 · 并列主语 <span class="kind">破折号内</span></h3>
+        <div class="quote">—and pressure from funding agencies,</div>
+        <div class="row"><span class="k">成分</span><span class="v">S，and 承接 U1，同为句子主语</span></div>
+        <div class="row"><span class="k">语法点</span><span class="v">破折号插入语；句尾逗号引出非限制性定语从句（U3）</span></div>
+        <div class="row"><span class="k">关键词</span><span class="v"><code>funding agency</code> 科研资助机构；<code>pressure</code> 压力（来源）</span></div>
+        <div class="row"><span class="k">中译</span><span class="v">以及来自资助机构的压力</span></div>
+      </div>
+
+      <div class="card c3">
+        <h3><span class="mini u3">U3</span>非限制性定语从句 <span class="kind">修饰 U2</span></h3>
+        <div class="quote">who are questioning why commercial publishers are making money from government-funded research by restricting access to it</div>
+        <div class="row"><span class="k">结构</span><span class="v"><code>who</code>(S) + <code>are questioning</code>(V) + why 从句(O)；why 从句内 <code>commercial publishers</code>(S) + <code>are making money</code>(V) + <code>by restricting...</code>（方式状语）</span></div>
+        <div class="row"><span class="k">语法点</span><span class="v">从句套从句：定语从句内嵌宾语从句；by + doing 表方式</span></div>
+        <div class="row"><span class="k">关键词</span><span class="v"><code>make money from</code> 从……牟利；<code>restrict access to</code> 限制对……的获取</span></div>
+        <div class="row"><span class="k">中译</span><span class="v">这些机构一直在质疑：商业出版商为何靠限制人们的获取，从政府资助的研究中赚钱</span></div>
+      </div>
+
+      <div class="card c4">
+        <h3><span class="mini u4">U4</span>谓语 + 宾语 + 宾补 <span class="kind">主干后半</span></h3>
+        <div class="quote">is making access to scientific results a reality.</div>
+        <div class="row"><span class="k">成分</span><span class="v"><code>is making</code>(V) + <code>access to scientific results</code>(O) + <code>a reality</code>(OC)</span></div>
+        <div class="row"><span class="k">语法点</span><span class="v">make + 宾语 + 宾语补足语（使……成为……）；与 U1+U2 合并后主干完整</span></div>
+        <div class="row"><span class="k">中译</span><span class="v">正在使获取科研成果成为现实</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 03 -->
+  <section class="block">
+    <div class="step-head">
+      <span class="step-no">03</span>
+      <h2>整合单句</h2>
+      <span class="step-desc">把单元分析装配回整体：恢复连接、衔接指代、贯通解释</span>
+    </div>
+
+    <div class="merge">
+      <div class="panel">
+        <h3>还原与衔接</h3>
+        <div class="row"><span class="k">连接</span><span class="v">and 将 U1、U2 并列为完整主语，与 U4 谓语构成主干 <code>(The Internet and pressure) is making ... a reality</code>；两处破折号成对，圈出插入成分</span></div>
+        <div class="row"><span class="k">指代</span><span class="v"><code>who</code> → funding agencies（U2）；<code>it</code> → government-funded research（U3 内）</span></div>
+        <div class="row"><span class="k">逻辑</span><span class="v">主句陈述结果（互联网使获取成为现实），插入语补充阻力来源（资助机构质疑出版商靠限制访问牟利）</span></div>
+      </div>
+
+      <div class="panel">
+        <h3>整句翻译</h3>
+        <div class="trans">互联网——以及来自资助机构的压力（这些机构一直在质疑：商业出版商为何靠限制人们的获取，从政府资助的研究中赚钱）——正在使获取科研成果成为现实。</div>
+        <h3 style="margin-top: 12px;">贯通解释</h3>
+        <div class="explain">主干其实很短：<code style="font-family: var(--mono); font-size: 12px;">The Internet ... is making ... a reality</code>。阅读时先跳过两处破折号之间的内容抓住主干，再回填插入信息，最后顺着 who 与 it 的指代把句意串通。</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>静态演示：以上标注均为手工预置，页面未接入任何分析逻辑，输入与交互尚未实现。</footer>
+
+</div>
+</body>
+</html>
