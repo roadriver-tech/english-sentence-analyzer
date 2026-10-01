@@ -73,6 +73,28 @@
   .principle { margin-top: 12px; font-size: 13px; background: var(--bg); border: 1px solid var(--line); border-left: 3px solid #111827; border-radius: 6px; padding: 8px 12px; color: #374151; }
   .principle b { font-weight: 600; color: #111827; }
 
+  /* 知识图谱 */
+  .kg-block { margin-top: 16px; border-top: 1px dashed var(--line); padding-top: 14px; }
+  .kg-block h3 { margin: 0 0 6px; font-size: 14px; }
+  .kg-desc { margin: 0 0 10px; font-size: 13px; color: var(--muted); }
+  svg.kg { display: block; width: 100%; height: auto; }
+  svg.kg .n { stroke-width: 1.5; }
+  svg.kg .n1 { fill: var(--u1-bg); stroke: var(--u1); }
+  svg.kg .n2 { fill: var(--u2-bg); stroke: var(--u2); }
+  svg.kg .n3 { fill: var(--u3-bg); stroke: var(--u3); }
+  svg.kg .nt { fill: var(--ink); font: 600 14px "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; }
+  svg.kg .e1 { stroke: var(--u1); stroke-width: 1.6; fill: none; }
+  svg.kg .e2 { stroke: var(--u2); stroke-width: 1.6; fill: none; stroke-dasharray: 6 4; }
+  svg.kg .e3 { stroke: var(--u3); stroke-width: 1.6; fill: none; }
+  svg.kg .e3.dash { stroke-dasharray: 6 4; }
+  svg.kg .el { fill: var(--muted); stroke: var(--card); stroke-width: 4; paint-order: stroke; font: 12px "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; font-size: 12px; color: var(--muted); }
+  .legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+  .kg-rows { margin-top: 12px; }
+  .kg-row { display: grid; grid-template-columns: 44px 1.3fr 1.2fr 1.3fr; gap: 10px; align-items: baseline; font-size: 13px; padding: 6px 0; border-top: 1px dotted var(--line); }
+  .kg-row.head { color: var(--muted); font-size: 12px; border-top: none; }
+  .kg-row i { font-style: normal; color: var(--muted); }
+
   /* 分析卡片 */
   .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
   .card { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: #fff; }
@@ -160,6 +182,66 @@
       <div class="rel"><span class="pair">U3 ⊂ U2</span><span class="type">嵌套</span><span class="note">why 宾语从句，作 U2 中 questioning 的宾语</span></div>
     </div>
     <div class="principle"><b>拆分原则：</b>只按主谓结构拆——拆出的每个单元都要有完整的主谓，能独立进入「分析单句」；谁嵌在谁里面只登记（⊂），不把单元切成主语、谓语之类的碎片。</div>
+
+    <div class="kg-block">
+      <h3>知识图谱分析</h3>
+      <p class="kg-desc">从拆出的单元提取实体与关系，按单元着色——图谱用来核对拆分是否保全句意，也是「整合单句」时的对照基准。</p>
+
+      <svg class="kg" viewBox="0 0 920 380" role="img" aria-label="例句知识图谱">
+        <defs>
+          <marker id="arr-u1" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#2563eb" /></marker>
+          <marker id="arr-u2" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#7c3aed" /></marker>
+          <marker id="arr-u3" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#059669" /></marker>
+        </defs>
+
+        <!-- U1：两股力量 → 获取科研成果 -->
+        <line class="e1" x1="215" y1="95" x2="368" y2="170" marker-end="url(#arr-u1)" />
+        <text class="el" x="282" y="116" text-anchor="middle">使成为现实</text>
+        <line class="e1" x1="215" y1="285" x2="368" y2="212" marker-end="url(#arr-u1)" />
+        <text class="el" x="282" y="244" text-anchor="middle">施压推动</text>
+
+        <!-- U2：资助机构 质疑 商业出版商（绕到图上方） -->
+        <path class="e2" d="M130,265 C130,40 790,40 790,72" marker-end="url(#arr-u2)" />
+        <text class="el" x="460" y="52" text-anchor="middle">质疑（凭什么）</text>
+
+        <!-- U3：商业出版商 与 政府资助的研究 -->
+        <line class="e3" x1="772" y1="125" x2="772" y2="258" marker-end="url(#arr-u3)" />
+        <text class="el" x="762" y="196" text-anchor="end">限制获取</text>
+        <line class="e3" x1="808" y1="125" x2="808" y2="258" marker-end="url(#arr-u3)" />
+        <text class="el" x="818" y="196">从中牟利</text>
+        <line class="e3 dash" x1="702" y1="116" x2="552" y2="184" marker-end="url(#arr-u3)" />
+        <text class="el" x="622" y="140" text-anchor="middle">阻碍（推断）</text>
+
+        <!-- 节点 -->
+        <rect class="n n1" x="45" y="77" width="170" height="46" rx="8" />
+        <text class="nt" x="130" y="106" text-anchor="middle">互联网</text>
+        <rect class="n n1" x="45" y="267" width="170" height="46" rx="8" />
+        <text class="nt" x="130" y="296" text-anchor="middle">资助机构</text>
+        <rect class="n n1" x="375" y="167" width="170" height="46" rx="8" />
+        <text class="nt" x="460" y="196" text-anchor="middle">获取科研成果</text>
+        <rect class="n n3" x="705" y="77" width="170" height="46" rx="8" />
+        <text class="nt" x="790" y="106" text-anchor="middle">商业出版商</text>
+        <rect class="n n3" x="705" y="267" width="170" height="46" rx="8" />
+        <text class="nt" x="790" y="296" text-anchor="middle">政府资助的研究</text>
+      </svg>
+
+      <div class="legend">
+        <span><span class="dot" style="background: var(--u1)"></span>U1 主句实体与关系</span>
+        <span><span class="dot" style="background: var(--u2)"></span>U2 定语从句关系</span>
+        <span><span class="dot" style="background: var(--u3)"></span>U3 宾语从句实体与关系</span>
+        <span>虚线箭头：从句内关系或推断（句中未明说）</span>
+      </div>
+
+      <div class="kg-rows">
+        <div class="kg-row head"><span>单元</span><span>主语</span><span>关系</span><span>客体</span></div>
+        <div class="kg-row"><span><span class="mini u1">U1</span></span><span>互联网</span><i>使成为现实</i><span>获取科研成果</span></div>
+        <div class="kg-row"><span><span class="mini u1">U1</span></span><span>资助机构（的压力）</span><i>施压推动</i><span>获取科研成果</span></div>
+        <div class="kg-row"><span><span class="mini u2">U2</span></span><span>资助机构</span><i>质疑（凭什么）</i><span>商业出版商牟利（即 U3）</span></div>
+        <div class="kg-row"><span><span class="mini u3">U3</span></span><span>商业出版商</span><i>限制获取</i><span>政府资助的研究</span></div>
+        <div class="kg-row"><span><span class="mini u3">U3</span></span><span>商业出版商</span><i>从中牟利</i><span>政府资助的研究</span></div>
+        <div class="kg-row"><span><span class="mini u3">U3</span></span><span>商业出版商</span><i>阻碍（推断）</i><span>获取科研成果</span></div>
+      </div>
+    </div>
   </section>
 
   <!-- STEP 02 -->
